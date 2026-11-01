@@ -97,3 +97,11 @@ Settings 使用独立 team-directory 提供加入/退出、成员增删、owner 
 新建/更新任务的 cycle_id 省略保持原语义、0 清空，正整数必须是同 Team 未关闭且启用的周期；列表省略表示全部、0 匹配未分配。保留原已关闭归属不阻止编辑其它字段。REST 的 Team cycles GET/PUT 与 cycles/{id} GET/PATCH、MCP list_cycles/configure_cycles/get_cycle/update_cycle 共用 Service。历史 timezone 随每个周期保存，后续改时区不重解释历史日期。
 
 `CyclesPage.tsx` 提供 Team 周期目录，`Cycles.tsx` 提供配置/名称编辑和选择器；`IssuesPage` 复用列表/看板展示周期任务。路径为 /<slug>/team/<key>/cycles 与 /<slug>/team/<key>/cycles/<id>。详情快捷归属走既有同票写入队列；配置及编辑用独立请求代际，失败保留草稿。cycles.css 复用共享 token。没有容量预测、冷却期、日历订阅或自动吸纳未分配任务。
+
+## Spec
+
+`spec.go` 管 Spec 与它的修订。`specs` 保存 workspace、team、workspace 内递增的 `number`（标识符 `SPEC-<n>`）和当前修订号，`spec_revisions` 只追加保存每次保存的完整 JSON 快照、说明和可信作者；触发器拒绝修订的更新与删除，也拒绝 team 与 spec 不同 workspace。内容类型 `SpecContent` 按 Spec Kit 的 spec 模板组织，校验在 Service 层做一次：状态、故事优先级、`US-`/`FR-`/`SC-` ID 的格式与唯一性、必填文字、澄清日期和 256 KiB 上限。一个 ID 若出现在更早的修订里却不在当前修订里，不能再使用。
+
+`UpdateSpec` 必须带 `base_revision`：与当前修订不同时返回冲突，不产生修订；追加修订与推进 `current_revision` 在同一事务里，用 `WHERE current_revision=?` 保证并发下只有一个保存成功。可见性复用 `visibleTeamIDs`，不可读的 spec、修订和 team 一律按不存在处理，创建时的 team 同样经 `teamID` 过滤。服务端只返回快照，不计算修订之间的差异，比较留给前端按 ID 进行。
+
+REST 在 `internal/httpapi/specs.go`：`/specs` 的 GET（可带 `team`）与 POST，`/specs/{identifier}` 的 GET 与 PUT，以及 `/revisions` 和 `/revisions/{number}`；PUT 的请求体不含标识符，由路径决定。MCP 在 `internal/mcpserver/specs.go`：`list_specs`、`get_spec`、`create_spec`、`update_spec`、`list_spec_revisions`、`get_spec_revision`。目前没有页面；`web/` 里的 Spec 页是另一张票的原型。

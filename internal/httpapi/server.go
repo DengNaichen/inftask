@@ -20,6 +20,7 @@ func New(service *app.Service, web, mcp http.Handler) http.Handler {
 	mux := http.NewServeMux()
 	s.cycleRoutes(mux)
 	s.workLogRoutes(mux)
+	s.specRoutes(mux)
 	s.labelRoutes(mux)
 	s.accessRoutes(mux)
 	s.teamAccessRoutes(mux)

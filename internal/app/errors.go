@@ -76,6 +76,10 @@ var (
 	ErrInvalidWorkspace  = newError(KindInvalid, "invalid workspace: slug must be 2 to 32 lowercase letters, digits, or hyphens starting with a letter and cannot be api, assets, auth, mcp, w, or webhooks; name is required")
 	ErrWorkspaceExists   = newError(KindConflict, "a workspace with this slug already exists")
 
+	ErrSpecNotFound = newError(KindNotFound, "spec not found")
+	ErrSpecConflict = newError(KindConflict, "spec changed since base_revision; read the current revision and retry")
+	ErrInvalidSpec  = newError(KindInvalid, "invalid spec")
+
 	ErrInvalidEmoji = newError(KindInvalid, "invalid emoji: choose a Unicode emoji or use an empty string to clear")
 
 	ErrInvalidLabel  = newError(KindInvalid, "invalid label operation")

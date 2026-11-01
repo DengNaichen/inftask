@@ -84,6 +84,7 @@ func New(service *app.Service) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "inftask", Version: "0.1.0"}, nil)
 	cycleTools(server, service)
 	addInitiativeTools(server, service)
+	addSpecTools(server, service)
 	statusNames := make([]string, len(app.Statuses))
 	for i, status := range app.Statuses {
 		statusNames[i] = string(status)

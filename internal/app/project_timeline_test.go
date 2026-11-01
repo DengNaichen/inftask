@@ -109,7 +109,7 @@ func TestProjectTimelineUpgrade(t *testing.T) {
 		t.Fatal(err)
 	}
 	removeTimelineSchema(t, root.db)
-	if _, err = root.db.Exec(fmt.Sprintf("PRAGMA user_version=%d", len(migrations)-1)); err != nil {
+	if _, err = root.db.Exec(fmt.Sprintf("PRAGMA user_version=%d", len(migrations)-2)); err != nil {
 		t.Fatal(err)
 	}
 	root.Close()
@@ -126,7 +126,7 @@ func TestProjectTimelineUpgrade(t *testing.T) {
 	if !reflect.DeepEqual(structure(t, root.db), structure(t, fresh.db)) {
 		t.Fatal("fresh and upgraded structures differ")
 	}
-	if _, err = os.Stat(filepath.Join(filepath.Dir(path), "backups", fmt.Sprintf("before-migration-%d.db", len(migrations)))); err != nil {
+	if _, err = os.Stat(filepath.Join(filepath.Dir(path), "backups", fmt.Sprintf("before-migration-%d.db", len(migrations)-1))); err != nil {
 		t.Fatal(err)
 	}
 	s, err = root.InWorkspace(ctx, "default")
