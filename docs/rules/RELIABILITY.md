@@ -4,7 +4,7 @@
 
 真实实例有数据，任何变更都不能要求删除数据库。`internal/app/schema.sql` 始终描述当前形状；新数据库直接使用它，`user_version` 设为迁移数量，不执行历史迁移。增加表使用 `CREATE TABLE IF NOT EXISTS`。
 
-修改已有表时同时更新 schema，并向 `internal/app/migrate.go` 的 `migrations` 追加升级 SQL；已交付迁移不得编辑。当前有 16 项：
+修改已有表时同时更新 schema，并向 `internal/app/migrate.go` 的 `migrations` 追加升级 SQL；已交付迁移不得编辑。当前有 17 项：
 
 - 迁移 1 新建 `teams`，重建 `issues` 并按 identifier 回填 `team` 和 `number`，每个前缀成为一个 team，`next_number` 是该前缀最大编号加一。迁移 1 之后，旧版二进制仍能读库，但建票会因缺 `team` 和 `number` 失败；回滚到旧版要恢复 `before-migration-1.db`，此后的写入会丢失。
 - 迁移 2 把表之间的引用从 identifier、Project 名称和 team key 改为整数 id：`teams`、`projects` 改用 `id` 主键（`key`、`name` 仍全实例唯一），`issues` 改存 `team_id`、`project_id`、`parent_id`，`relations` 改存 `issue_id`、`other_id`，`links`、`comments`、`issue_labels` 改存 `issue_id`。issue、链接和评论保留原 id；related 关系按 id 重排为 `issue_id < other_id`。`pull_requests.issue_identifier` 不变。迁移 2 之后，旧版二进制仍能启动，但读写 issue 会因旧列名不存在而失败；回滚到旧版要停服务并恢复 `before-migration-2.db`，此后的写入会丢失。
@@ -37,6 +37,8 @@
 旧环导致升级失败时保留原库与失败前备份，先在隔离副本定位并确定要移除的关系；由维护者确认后停服务修复原库，不自动删边。重试前将同名迁移备份另存到受保护位置，避免现有 `VACUUM INTO` 因目标已存在而失败，再启动升级。
 
 - 迁移 15 新建 team_cycle_settings/cycles，给 issues 追加可空 cycle_id 和索引、同 Team 插入/更新触发器；旧票保持无周期，所有原字段、引用和时间不变。版本 14 升级前保存 before-migration-15.db，新库和升级库结构一致。旧二进制不会执行周期滚动或维护快照，回滚前须停服务；恢复备份会丢失升级后写入。
+
+- 迁移 17 新建 `specs`、`spec_revisions` 及 team 查询索引，加上 `specs` 与 team 同 workspace 的插入/更新触发器和禁止 `spec_revisions` 更新、删除的触发器；不重建原表，不改任何已有 id、引用、编号或时间。版本 16 升级前保存 `before-migration-17.db`，新库和升级库结构一致。旧二进制可忽略新增表继续既有操作，但不读写 Spec；停服务换回旧版后数据仍在库中，恢复升级前备份会丢失之后写入的 Spec 和修订。不要在迁移之外手动更新或删除 `spec_revisions`，触发器会拒绝；需要清理时先停服务并备份。
 
 登记的迁移只覆盖这些历史形状，不代表能把任意旧结构自动转换。
 

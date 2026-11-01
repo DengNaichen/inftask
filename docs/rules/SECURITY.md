@@ -62,3 +62,5 @@ Service 要求每次委派时任务已有非空人类 assignee，主/子 Agent �
 ## 工作记录
 
 `add_work_log`、`list_work_logs`、`get_work_log` 与详情决策摘要均先经过工作区活动成员和任务团队访问检查；按记录 id 读正文还必须匹配同一票的内部 id。操作者来自可信请求上下文，未知 actor 输入由 MCP 严格 schema 拒绝。kind=decision/progress 是内容分类，不是 Agent 独立鉴权或人类审批证明。Markdown 复用无 raw HTML 的渲染器；摘要单行最多 240 字符，正文最多 65,536 字节。REST 只提供工作记录读取，网页写入继续使用评论入口。
+
+Spec 的 REST（`/specs`）与 MCP（`list_specs`、`get_spec`、`create_spec`、`update_spec`、`list_spec_revisions`、`get_spec_revision`）先经过工作区活动成员检查，再按所属 team 的可见性过滤；不可读的 spec 和修订按不存在处理，创建与更新不接收客户端指定的作者，作者取可信请求上下文。内容是普通文本字段，不是 Markdown 或 HTML，不执行也不渲染任何 agent 编写的代码；之后的自定义 canvas 在运行 agent 代码前须先补安全响应头和本文件的规则。更新要求 `base_revision`，避免多个调用方静默互相覆盖。

@@ -317,3 +317,36 @@ WHEN NEW.cycle_id IS NOT NULL
 BEGIN
  SELECT RAISE(ABORT, 'cycle must belong to the issue team') WHERE NOT EXISTS(SELECT 1 FROM cycles WHERE id=NEW.cycle_id AND team_id=NEW.team_id);
 END;
+
+CREATE TABLE IF NOT EXISTS specs (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+ team_id INTEGER NOT NULL REFERENCES teams(id),
+ number INTEGER NOT NULL CHECK(number > 0),
+ current_revision INTEGER NOT NULL CHECK(current_revision > 0),
+ created_at TEXT NOT NULL,
+ updated_at TEXT NOT NULL,
+ UNIQUE(workspace_id,number)
+);
+CREATE INDEX IF NOT EXISTS specs_team_idx ON specs(team_id);
+CREATE TRIGGER IF NOT EXISTS specs_workspace_insert BEFORE INSERT ON specs
+WHEN (SELECT workspace_id FROM teams WHERE id=NEW.team_id) <> NEW.workspace_id
+BEGIN SELECT RAISE(ABORT, 'spec and team must share a workspace'); END;
+CREATE TRIGGER IF NOT EXISTS specs_workspace_update BEFORE UPDATE OF workspace_id,team_id ON specs
+WHEN (SELECT workspace_id FROM teams WHERE id=NEW.team_id) <> NEW.workspace_id
+BEGIN SELECT RAISE(ABORT, 'spec and team must share a workspace'); END;
+-- Each save appends a full structured snapshot; revisions are never edited or removed.
+CREATE TABLE IF NOT EXISTS spec_revisions (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ spec_id INTEGER NOT NULL REFERENCES specs(id),
+ number INTEGER NOT NULL CHECK(number > 0),
+ content TEXT NOT NULL CHECK(json_valid(content)),
+ message TEXT NOT NULL DEFAULT '',
+ author_subject TEXT REFERENCES users(subject),
+ created_at TEXT NOT NULL,
+ UNIQUE(spec_id,number)
+);
+CREATE TRIGGER IF NOT EXISTS spec_revisions_no_update BEFORE UPDATE ON spec_revisions
+BEGIN SELECT RAISE(ABORT, 'spec revisions are append-only'); END;
+CREATE TRIGGER IF NOT EXISTS spec_revisions_no_delete BEFORE DELETE ON spec_revisions
+BEGIN SELECT RAISE(ABORT, 'spec revisions are append-only'); END;
