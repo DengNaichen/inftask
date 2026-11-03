@@ -6,6 +6,14 @@
 
 HTTP 组装层没有独立的本地 Host allowlist，不能从默认 loopback 监听推断所有非本地 Host 都被拒绝。修改监听范围或代理部署会改变信任边界，需要另行确定任务范围；云端通过 HTTPS 反向代理发布，配置与边界见 [开发](../DEVELOPMENT.md#云端团队部署)。
 
+## macOS Electron 客户端
+
+`desktop/` 只连接固定正式云端，不启动本地服务、不接管旧 SQLite。InfTask 与核实的 UC HTTPS origin 是唯一可在窗口/frame 内导航的来源；未知重定向被拒绝，其他 HTTP(S) 链接在系统浏览器打开，非 HTTP(S) 和带用户凭据的 URL 不交给操作系统。
+
+远程页面没有 Node integration、preload 或 IPC 本机桥，开启 context isolation、sandbox 和 webSecurity。登录子窗口沿用同一受限 session；页面/设备权限、webview 和下载均拒绝。默认 Chromium 证书校验保持启用，不修改云端认证或 Origin 检查。Chromium 本机 profile 含 cookies 等登录状态，不是业务数据库，也不能上传排障。自动测试只在未打包的入口按 SHA-256 指纹信任自己的临时 HTTPS fixture；真实云端检查不忽略证书错误。
+
+默认 ad-hoc 签名仅支持本地试用，不代表 Developer ID 或 Apple 公证。构建、独立持久化 session、实际验证和正式分发要求见 [桌面客户端](../../desktop/README.md)。
+
 ## 输入与输出
 
 HTTP JSON 请求限制为 1 MiB，拒绝未知字段和多余 JSON 值；业务规则仍由 Service 统一校验。SQL 值使用绑定参数，动态条件由源码构造。修改筛选时核对值是否仍走参数绑定，不能拼接请求值进 SQL。

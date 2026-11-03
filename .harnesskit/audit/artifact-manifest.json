@@ -44,6 +44,10 @@
     {
       "path": "deploy/README.md",
       "owner": "deploy"
+    },
+    {
+      "path": "desktop/README.md",
+      "owner": "desktop"
     }
   ]
 }

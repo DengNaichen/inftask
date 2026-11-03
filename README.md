@@ -95,6 +95,19 @@ The cloud instance uses InfOne UC for sign-in. All authenticated UC users see ev
 
 See [cloud deployment and recovery](docs/DEVELOPMENT.md#云端团队部署) for configuration, Compose, and the remote MCP OAuth contract. Deployment artifacts are [Dockerfile](Dockerfile), [Compose](deploy/compose.yaml), and [Caddyfile](deploy/Caddyfile). The single instance keeps SQLite on a persistent volume; it is not a multi-replica deployment.
 
+## macOS desktop client
+
+The [Electron client](desktop/README.md) connects to the existing cloud instance. It does not bundle a Go server or a local database, and does not change your agent's cloud MCP configuration. On macOS:
+
+```sh
+npm --prefix desktop ci
+npm --prefix desktop start
+# Build an Apple Silicon .app and .dmg for local testing:
+npm --prefix desktop run dist:mac
+```
+
+The DMG is at `desktop/dist/InfTask-0.1.0-arm64.dmg`. Sign in through UC inside the app. Closing its window keeps the app in the Dock; Quit exits it. The default build has an ad-hoc signature for local use, not a Developer ID signature or Apple notarization. See [desktop build, session, security, and distribution notes](desktop/README.md).
+
 ## Human assignment
 
 Issues have one human assignee or are unassigned. Any active member who can edit an issue may reassign or clear it. Public teams accept any active workspace member; private teams accept their active team members. Suspended users remain visible on past assignments but cannot receive new ones. Assignment does not lock editing or represent an agent session.

@@ -43,7 +43,7 @@ icon_tool='/Applications/Xcode.app/Contents/Applications/Icon Composer.app/Conte
 "$icon_tool" "$PWD/assets/InfTask.icon" --export-image --output-file "$PWD/web/src/assets/inftask-icon.png" --platform macOS --rendition Default --width 128 --height 128 --scale 1 --design-generation 27
 ```
 
-应用运行和常规构建只消费已提交的 PNG，不要求安装 Icon Composer。
+网页运行和常规构建只消费已提交的 PNG，不要求安装 Icon Composer。macOS Electron 打包使用 `desktop/assets/icon.icns`，由同一源文件导出 Default/macOS 外观；图层改变后运行 `npm --prefix desktop run icon` 更新 ICNS，常规桌面打包也不要求 Icon Composer。桌面业务页面直接沿用云端样式，没有第二套业务 UI；本地恢复页用系统字体和同一 light/dark 画布、文字与操作色角色，不依赖网络加载字体。
 
 ## 图标
 

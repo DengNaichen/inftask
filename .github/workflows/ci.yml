@@ -25,7 +25,27 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: |
+            web/package-lock.json
+            desktop/package-lock.json
       - run: npm --prefix web ci
+      - run: npm --prefix desktop ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
       - run: go vet ./...
       - run: make test
+
+  desktop-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm --prefix desktop ci
+      - run: npm --prefix desktop test
+      - run: npm --prefix desktop run smoke
+      - run: npm --prefix desktop run dist:mac
+      - run: codesign --verify --deep --strict desktop/dist/mac-arm64/InfTask.app

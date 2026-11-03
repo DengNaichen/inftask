@@ -21,7 +21,7 @@ go vet ./...
 make test
 ```
 
-`go vet ./...` 不需要先构建前端，原因见 [开发](DEVELOPMENT.md)。`make test` 先构建前端，再运行仓库接票 hook 合同测试、Hooks lint、前端单次组件测试和 `go test ./...`。前端 build 只证明 TypeScript 严格类型检查与 Vite 打包；测试独立执行，本地成功不等于已配置自动 Hook。
+`go vet ./...` 不需要先构建前端，原因见 [开发](DEVELOPMENT.md)。`make test` 先构建前端，再运行仓库接票 hook 合同测试、Hooks lint、前端单次组件测试、`npm --prefix desktop test` 和 `go test ./...`。前端 build 只证明 TypeScript 严格类型检查与 Vite 打包；测试独立执行，本地成功不等于已配置自动 Hook。
 
 GitHub Actions（`.github/workflows/ci.yml`）在目标为 `main` 的 pull request 和 push 到 `main` 时，于 `ubuntu-latest` 上安装前端依赖并运行 `go vet ./...` 与 `make test`，结果与本地同一组命令。它运行 Vitest + React Testing Library 的 jsdom 行为测试，不覆盖真实浏览器布局及 UC、GitHub 集成；是否要求 CI 通过才能合并由分支保护决定，仓库目前未设置。
 
@@ -46,6 +46,18 @@ GitHub Actions（`.github/workflows/ci.yml`）在目标为 `main` 的 pull reque
 | UI、导航、共享外观 | `npm --prefix web run build`，另加 [UI 检查](#ui-检查) | 编译/打包与实际操作分别报告 |
 
 新增测试围绕真实可发生的输入与边界；数据库不变量需要真实隔离 SQLite，不能由 mock 成功推出迁移正确。文档改动检查相对链接、路径、命令与源码的一致性，不为可逆低影响文字编辑添加实现镜像测试。
+
+## macOS 云端客户端
+
+先 `npm --prefix desktop ci`。桌面检查入口与证明范围见 [desktop/README](../desktop/README.md#验证)：
+
+- `npm --prefix desktop test`：导航、子窗口、权限、会话配置和失败恢复的单元合同，不启动真实 UC。
+- `npm --prefix desktop run smoke -- <仓库外截图目录>`：macOS 上实际 Electron + 临时 HTTPS fixture，覆盖虚构登录、cookie 跨进程保留、外链/重定向、Dock 重开、自签证书拒绝和服务失败后的重试。
+- `npm --prefix desktop run dist:mac` 与 `codesign --verify --deep --strict desktop/dist/mac-arm64/InfTask.app`：arm64 DMG 构建与 ad-hoc 签名完整性，不证明 Apple 公证或 Gatekeeper 认可。
+- `npm --prefix desktop run smoke:packaged -- <仓库外截图目录>`：实际打包 App 的正式云端只读登录页检查；无真实凭据，不提交账号，不证明登录后的权限、续期或退出。
+- `npm --prefix desktop audit`：锁文件依赖通告检查，不代替运行验证。
+
+CI 的 Linux 聚合检查包含桌面单元测试；独立 macOS job 执行单元测试、隔离 fixture smoke、arm64 DMG 和签名检查，不连接正式实例。真实 UC 登录进入工作区、重启保留、Sign out 和会话过期后重新登录，以及非开发机器的下载/Gatekeeper 验收，仍需用户交互并分别记录。所有自动测试 profile 均为临时目录；不读取维护者的浏览器会话或已停用本机库。
 
 ## 前端定向检查
 
